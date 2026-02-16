@@ -18,21 +18,21 @@ const Gallery = () => {
 
     const images = [
         { url: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=800&q=80', title: 'Signature Gol Gappe', category: 'Food' },
-        { url: 'https://images.unsplash.com/photo-1601050638911-c3260027b11c?w=800&q=80', title: 'Art of Spiced Water', category: 'Process' },
+        { url: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRGCEIWUvQdDp_5cHUzq1M5uu8qtuaFS_teYg&s', title: 'Art of Spiced Water', category: 'Process' },
         { url: 'https://images.unsplash.com/photo-1541140134513-85a161dc4a00?w=800&q=80', title: 'Street Soul', category: 'Ambiance' },
         { url: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=800&q=80', title: 'Creamy Dahi Puri', category: 'Food' },
 
         { url: 'https://images.unsplash.com/photo-1517244683847-7456b63c5969?w=800&q=80', title: 'The Evening Rush', category: 'People' },
         { url: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80', title: 'Royal Raj Kachori', category: 'Food' },
         { url: 'https://images.unsplash.com/photo-1606491956689-2ea866880c84?w=800&q=80', title: 'Golden Pav Bhaji', category: 'Food' },
-        { url: 'https://images.unsplash.com/photo-1544787210-282713df8b5f?w=800&q=80', title: 'Aromatic Masala Chai', category: 'Process' },
-        { url: 'https://images.unsplash.com/photo-1505253149613-112d21d9f6a9?w=800&q=80', title: 'Classic Plating', category: 'Ambiance' },
-        { url: 'https://images.unsplash.com/photo-1589133423719-74e2d363b90f?w=800&q=80', title: 'Classic Plating', category: 'Ambiance' },
+        { url: 'https://cdn.shopify.com/s/files/1/0758/6929/0779/files/Masala_Tea_-_Annams_Recipes_Shop_2_480x480.jpg?v=1732347934', title: 'Aromatic Masala Chai', category: 'Process' },
+        { url: 'https://img.freepik.com/free-photo/high-angle-shot-fusion-food-with-sushi-seasonings-plate-wooden-surface_181624-42994.jpg?semt=ais_user_personalization&w=740&q=80', title: 'Classic Plating', category: 'Ambiance' },
+        { url: 'https://rosannaetc.com/wp-content/uploads/2022/02/Quick-Plating-Techniques-For-Sauce-example-2.jpg', title: 'Classic Plating', category: 'Ambiance' },
         { url: 'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=800&q=80', title: 'Fresh Garnish', category: 'Process' },
         { url: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80', title: 'Crunchy Bites', category: 'Food' },
         { url: 'https://images.unsplash.com/photo-1561758033-d89a9ad46330?w=800&q=80', title: 'Happy Little Faces', category: 'People' },
         { url: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1920&auto=format&fit=crop&q=80', title: 'The Perfect Snap', category: 'Ambiance' },
-        { url: 'https://images.unsplash.com/photo-1582576163090-6c510f87a8a2?w=800&q=80', title: 'Modern Heritage', category: 'Ambiance' }
+        { url: 'https://i.ytimg.com/vi/OyUvlDbcXHg/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLC40-CBGf6x0JjWlv2tdAew7TnCdg', title: 'Modern Heritage', category: 'Ambiance' }
     ];
 
     const filteredImages = filter === 'All' ? images : images.filter(img => img.category === filter);

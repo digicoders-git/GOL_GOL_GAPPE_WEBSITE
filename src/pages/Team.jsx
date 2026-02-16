@@ -23,7 +23,7 @@ const Team = () => {
         {
             name: "Chef Rajveer Singh",
             role: "Executive Head Chef",
-            image: "https://images.unsplash.com/photo-1583394238182-6f3ad43267b1?w=800&auto=format&fit=crop&q=80",
+            image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSZx9f9Yf_C6oibLGdbjvk5K8wu3-E_Ydes6Q&s",
             bio: "Guardian of the secret spice blend. Rajveer ensures every 'Puri' meets our golden standards.",
             icon: FaAward
         },
