@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { FaArrowRight, FaUtensils, FaLeaf, FaClock, FaStar, FaInstagram, FaQuoteRight, FaFire, FaSmile, FaHeart } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
+import OfferSlider from '../components/OfferSlider';
 
 const FeatureCard = ({ icon: Icon, title, desc }) => (
     <motion.div
@@ -71,6 +72,13 @@ const Home = () => {
                 </div>
 
                 <div className="absolute bottom-0 left-0 w-full h-40 md:h-60 bg-gradient-to-t from-background to-transparent z-10 pointer-events-none"></div>
+            </section>
+
+            {/* Offer Slider Section */}
+            <section className="py-12 md:py-20 bg-background">
+                <div className="container mx-auto px-6">
+                    <OfferSlider />
+                </div>
             </section>
 
             {/* Core Values Section (Features) */}
