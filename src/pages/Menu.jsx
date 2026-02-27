@@ -1,9 +1,13 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { FaUtensils, FaLeaf, FaPepperHot, FaStar, FaCocktail, FaFire } from 'react-icons/fa';
+import { getAvailableProducts } from '../utils/api';
 
 const Menu = () => {
     const containerRef = useRef(null);
+    const [menuItems, setMenuItems] = useState([]);
+    const [loading, setLoading] = useState(true);
+
     const { scrollYProgress } = useScroll({
         target: containerRef,
         offset: ["start start", "end end"]
@@ -12,33 +16,51 @@ const Menu = () => {
     const heroY = useTransform(scrollYProgress, [0, 0.2], [0, -100]);
     const heroOpacity = useTransform(scrollYProgress, [0, 0.15], [1, 0]);
 
-    const menuItems = [
-        {
-            category: "Signature Chaats",
-            items: [
-                { name: "Classic Pani Puri", price: "₹60", desc: "Our signature crunch with spiced tamarind water.", image: "https://media.istockphoto.com/id/2162493302/photo/exploring-the-tangy-spicy-and-refreshing-delight-of-pani-puri-indias-favourite-street-food.jpg?s=612x612&w=0&k=20&c=a4_z86B2TwR29HCX1bgWS9IgXwtFCtoQNJonL4pCM1U=", tag: "Best Seller", icon: FaStar, spicy: true },
-                { name: "Dahi Poori", price: "₹80", desc: "Crispy shells stuffed with sprouts, yogurt and chutneys.", image: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=800&q=80", tag: "Must Try", icon: FaLeaf, spicy: false },
-                { name: "Raj Kachori", price: "₹120", desc: "The 'King of all Kachoris' loaded with flavors and garnishes.", image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80", tag: "Royal", icon: FaStar, spicy: true },
-                { name: "Aloo Tikki Chaat", price: "₹90", desc: "Crispy potato patties topped with spicy peas and chutneys.", image: "https://t3.ftcdn.net/jpg/15/17/53/36/360_F_1517533633_sfC044NeT8FnbRqERRQIT48J4Lm4dXib.jpg", tag: "Classic", icon: FaFire, spicy: true }
-            ]
-        },
-        {
-            category: "Street Staples",
-            items: [
-                { name: "Pav Bhaji", price: "₹150", desc: "Buttery mashed vegetables served with toasted pav buns.", image: "https://images.unsplash.com/photo-1606491956689-2ea866880c84?w=800&q=80", tag: "Buttery", icon: FaUtensils, spicy: true },
-                { name: "Chole Bhature", price: "₹180", desc: "Spicy chickpeas served with large fluffy deep-fried bread.", image: "https://t3.ftcdn.net/jpg/15/60/30/02/360_F_1560300294_DvwMrW0ABmfsQjSsiGGzkp22AxlFhvjS.jpg", tag: "Legendary", icon: FaFire, spicy: true },
-                { name: "Vada Pav", price: "₹40", desc: "The Mumbai special potato fritter in a soft bun with chutneys.", image: "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=800&q=80", tag: "Snack", icon: FaUtensils, spicy: true }
-            ]
-        },
-        {
-            category: "Refreshing Drinks",
-            items: [
-                { name: "Royal Lassi", price: "₹90", desc: "Thick, creamy sweet yogurt drink topped with malai.", image: "https://images.unsplash.com/photo-1571115177098-24ec42ed204d?w=800&q=80", tag: "Refreshing", icon: FaCocktail, spicy: false },
-                { name: "Masala Chai", price: "₹30", desc: "The soul of India in a cup, infused with aromatic spices.", image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTlJ9DmTY0n_aNZHjosFotWLpFOlMFdZlUqdQ&s", tag: "Aromatic", icon: FaLeaf, spicy: false },
-                { name: "Mango Mastani", price: "₹140", desc: "A rich mango milkshake topped with icecream and nuts.", image: "https://images.unsplash.com/photo-1546173159-315724a31696?w=800&q=80", tag: "Sweet", icon: FaCocktail, spicy: false }
-            ]
-        }
-    ];
+    useEffect(() => {
+        const fetchProducts = async () => {
+            try {
+                const response = await getAvailableProducts();
+                if (response.data.success) {
+                    const products = response.data.products;
+                    
+                    // Group products by category
+                    const grouped = products.reduce((acc, product) => {
+                        const category = product.category || 'Other';
+                        if (!acc[category]) {
+                            acc[category] = [];
+                        }
+                        acc[category].push({
+                            name: product.name,
+                            price: `₹${product.discountPrice || product.price}`,
+                            desc: product.description || 'Delicious item from our kitchen',
+                            image: product.thumbnail || product.images?.[0] || 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=800&q=80',
+                            tag: product.tags?.[0] || (product.status === 'Low Stock' ? 'Limited' : 'Available'),
+                            icon: product.foodType === 'veg' ? FaLeaf : FaUtensils,
+                            spicy: product.tags?.includes('Spicy') || false,
+                            inStock: product.inStock && product.quantity > 0
+                        });
+                        return acc;
+                    }, {});
+
+                    // Convert to array format
+                    const menuData = Object.keys(grouped).map(category => ({
+                        category,
+                        items: grouped[category]
+                    }));
+
+                    setMenuItems(menuData);
+                }
+            } catch (error) {
+                console.error('Failed to fetch products:', error);
+                // Fallback to empty array if API fails
+                setMenuItems([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchProducts();
+    }, []);
 
     return (
         <div ref={containerRef} className="animate-fade-in bg-background overflow-hidden">
@@ -86,7 +108,17 @@ const Menu = () => {
 
             {/* Menu Sections */}
             <div className="py-20 md:py-32 container mx-auto px-6">
-                {menuItems.map((section, sIdx) => (
+                {loading ? (
+                    <div className="text-center py-20">
+                        <div className="inline-block w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                        <p className="mt-4 text-zinc-500 font-bold">Loading menu...</p>
+                    </div>
+                ) : menuItems.length === 0 ? (
+                    <div className="text-center py-20">
+                        <p className="text-2xl text-zinc-400 font-bold">No items available at the moment</p>
+                    </div>
+                ) : (
+                    menuItems.map((section, sIdx) => (
                     <div key={sIdx} className="mb-20 md:mb-32">
                         <motion.div
                             whileInView={{ opacity: 1, x: 0 }}
@@ -130,9 +162,14 @@ const Menu = () => {
                                         <p className="text-text-muted text-base md:text-lg leading-relaxed mb-6 md:mb-8 flex-grow italic">{item.desc}</p>
                                         <motion.button
                                             whileTap={{ scale: 0.95 }}
-                                            className="w-full py-4 md:py-5 rounded-[1.5rem] md:rounded-[2rem] bg-secondary text-white font-black uppercase tracking-widest text-[10px] md:text-xs hover:bg-primary hover:text-secondary transition-all shadow-xl"
+                                            disabled={!item.inStock}
+                                            className={`w-full py-4 md:py-5 rounded-[1.5rem] md:rounded-[2rem] font-black uppercase tracking-widest text-[10px] md:text-xs transition-all shadow-xl ${
+                                                item.inStock 
+                                                    ? 'bg-secondary text-white hover:bg-primary hover:text-secondary cursor-pointer' 
+                                                    : 'bg-zinc-200 text-zinc-400 cursor-not-allowed'
+                                            }`}
                                         >
-                                            Add to Plate
+                                            {item.inStock ? 'Add to Plate' : 'Out of Stock'}
                                         </motion.button>
                                     </div>
                                 </motion.div>
