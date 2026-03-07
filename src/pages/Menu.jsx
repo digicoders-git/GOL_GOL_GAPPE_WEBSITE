@@ -119,7 +119,7 @@ const Menu = () => {
                     </div>
                 ) : (
                     menuItems.map((section, sIdx) => (
-                    <div key={sIdx} className="mb-20 md:mb-32">
+                        <div key={sIdx} className="mb-20 md:mb-32">
                         <motion.div
                             whileInView={{ opacity: 1, x: 0 }}
                             initial={{ opacity: 0, x: -50 }}
@@ -175,8 +175,9 @@ const Menu = () => {
                                 </motion.div>
                             ))}
                         </div>
-                    </div>
-                ))}
+                        </div>
+                    ))
+                )}
             </div>
 
             {/* Special Platter CTA */}
@@ -199,7 +200,7 @@ const Menu = () => {
                 </motion.div>
             </section>
         </div>
-    );
+    )   ;
 };
 
 export default Menu;
