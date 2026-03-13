@@ -77,7 +77,7 @@ const OfferSlider = () => {
 
                                     {/* Title */}
                                     <h3 className="text-3xl md:text-5xl font-display font-bold text-secondary mb-4 leading-tight">{offer.title}</h3>
-                                    
+
                                     {/* Description */}
                                     <p className="text-text-muted text-lg md:text-xl mb-6 leading-relaxed">{offer.description}</p>
 
@@ -133,7 +133,7 @@ const OfferSlider = () => {
                         <button onClick={nextSlide} className="absolute right-4 md:right-6 top-1/2 -translate-y-1/2 bg-white hover:bg-primary hover:text-white p-3 md:p-4 rounded-full shadow-2xl transition-all hover:scale-110 z-10">
                             <FaChevronRight size={20} className="md:w-6 md:h-6" />
                         </button>
-                        
+
                         {/* Dots Indicator */}
                         <div className="flex justify-center gap-2 mt-6">
                             {offers.map((_, index) => (
