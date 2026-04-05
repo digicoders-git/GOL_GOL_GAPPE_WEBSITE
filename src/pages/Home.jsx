@@ -122,9 +122,9 @@ const Home = () => {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
                         {[
-                            { name: "Classic Pani Puri", price: "₹60", desc: "Spiced tamarind water in gold-standard crunch.", image: "https://media.istockphoto.com/id/2162493302/photo/exploring-the-tangy-spicy-and-refreshing-delight-of-pani-puri-indias-favourite-street-food.jpg?s=612x612&w=0&k=20&c=a4_z86B2TwR29HCX1bgWS9IgXwtFCtoQNJonL4pCM1U=" },
-                            { name: "Dahi Poori", price: "₹80", desc: "Creamy yogurt and tangy chutneys explosion.", image: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=800&q=80" },
-                            { name: "Raj Kachori", price: "₹120", desc: "The king of Kachoris with royal toppings.", image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80" }
+                            { name: "Classic Pani Puri", basePrice: 60, discountPrice: 45, desc: "Spiced tamarind water in gold-standard crunch.", image: "https://media.istockphoto.com/id/2162493302/photo/exploring-the-tangy-spicy-and-refreshing-delight-of-pani-puri-indias-favourite-street-food.jpg?s=612x612&w=0&k=20&c=a4_z86B2TwR29HCX1bgWS9IgXwtFCtoQNJonL4pCM1U=" },
+                            { name: "Dahi Poori", basePrice: 80, discountPrice: 60, desc: "Creamy yogurt and tangy chutneys explosion.", image: "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=800&q=80" },
+                            { name: "Raj Kachori", basePrice: 120, discountPrice: 90, desc: "The king of Kachoris with royal toppings.", image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=800&q=80" }
                         ].map((item, idx) => (
                             <motion.div
                                 key={idx}
@@ -133,7 +133,16 @@ const Home = () => {
                             >
                                 <div className="h-48 md:h-64 overflow-hidden relative">
                                     <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-4 py-1.5 rounded-full font-black text-secondary text-xs md:text-sm">{item.price}</div>
+                                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-4 py-1.5 rounded-full">
+                                        {item.discountPrice ? (
+                                            <div className="flex items-center gap-1">
+                                                <span className="text-xs text-zinc-400 line-through">₹{item.basePrice}</span>
+                                                <span className="font-black text-secondary text-xs">₹{item.discountPrice}</span>
+                                            </div>
+                                        ) : (
+                                            <span className="font-black text-secondary text-xs md:text-sm">₹{item.basePrice}</span>
+                                        )}
+                                    </div>
                                 </div>
                                 <div className="p-8 md:p-10">
                                     <h3 className="text-xl md:text-2xl font-display text-secondary mb-2 md:mb-3">{item.name}</h3>

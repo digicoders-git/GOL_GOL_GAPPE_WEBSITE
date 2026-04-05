@@ -1,9 +1,10 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { FaUtensils, FaLeaf, FaPepperHot, FaStar, FaCocktail, FaFire } from 'react-icons/fa';
+import toast from 'react-hot-toast';
 import { getAvailableProducts } from '../utils/api';
 
-const Menu = () => {
+const Menu = ({ user, addToCart }) => {
     const containerRef = useRef(null);
     const [menuItems, setMenuItems] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -31,7 +32,8 @@ const Menu = () => {
                         }
                         acc[category].push({
                             name: product.name,
-                            price: `₹${product.discountPrice || product.price}`,
+                            basePrice: product.price,
+                            discountPrice: product.discountPrice,
                             desc: product.description || 'Delicious item from our kitchen',
                             image: product.thumbnail || product.images?.[0] || 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=800&q=80',
                             tag: product.tags?.[0] || (product.status === 'Low Stock' ? 'Limited' : 'Available'),
@@ -157,12 +159,29 @@ const Menu = () => {
                                                 <h3 className="text-2xl md:text-3xl font-display text-secondary mb-1 md:mb-2">{item.name}</h3>
                                                 <item.icon className="text-primary/40 text-lg" />
                                             </div>
-                                            <span className="text-xl md:text-2xl font-display text-primary">{item.price}</span>
+                                            <div className="text-right">
+                                                {item.discountPrice && item.discountPrice < item.basePrice ? (
+                                                    <>
+                                                        <span className="text-xs md:text-sm font-black text-zinc-400 line-through mr-2">₹{item.basePrice}</span>
+                                                        <span className="text-xl md:text-2xl font-display text-primary block">₹{item.discountPrice}</span>
+                                                    </>
+                                                ) : (
+                                                    <span className="text-xl md:text-2xl font-display text-primary">₹{item.basePrice}</span>
+                                                )}
+                                            </div>
                                         </div>
                                         <p className="text-text-muted text-base md:text-lg leading-relaxed mb-6 md:mb-8 flex-grow italic">{item.desc}</p>
                                         <motion.button
                                             whileTap={{ scale: 0.95 }}
                                             disabled={!item.inStock}
+                                            onClick={() => {
+                                                if (!user) {
+                                                    window.location.href = '/login';
+                                                    return;
+                                                }
+                                                addToCart({ ...item, _id: item.name, price: item.discountPrice || item.basePrice });
+                                                toast.success(`${item.name} added to cart!`);
+                                            }}
                                             className={`w-full py-4 md:py-5 rounded-[1.5rem] md:rounded-[2rem] font-black uppercase tracking-widest text-[10px] md:text-xs transition-all shadow-xl ${
                                                 item.inStock 
                                                     ? 'bg-secondary text-white hover:bg-primary hover:text-secondary cursor-pointer' 

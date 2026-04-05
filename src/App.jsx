@@ -13,7 +13,7 @@ import Gallery from './pages/Gallery';
 import Reviews from './pages/Reviews';
 import Reservations from './pages/Reservations';
 import Team from './pages/Team';
-import Franchise from './pages/Franchise';
+import Checkout from './pages/Checkout';
 
 function App() {
   const location = useLocation();
@@ -48,7 +48,7 @@ function App() {
 
       {!loading && (
         <>
-          <Navbar />
+          <Navbar user={user} onLogout={handleLogout} />
           <main className="flex-grow">
             <AnimatePresence mode="wait">
               <Routes location={location} key={location.pathname}>
@@ -61,6 +61,7 @@ function App() {
                 <Route path="/reservations" element={<PageTransition><Reservations /></PageTransition>} />
                 <Route path="/team" element={<PageTransition><Team /></PageTransition>} />
                 <Route path="/franchise" element={<PageTransition><Franchise /></PageTransition>} />
+                <Route path="/checkout" element={<PageTransition><Checkout cart={cart} user={user} removeFromCart={removeFromCart} updateQty={updateQty} /></PageTransition>} />
               </Routes>
             </AnimatePresence>
           </main>

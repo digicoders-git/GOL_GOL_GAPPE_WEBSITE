@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaBars, FaTimes } from 'react-icons/fa';
+import { FaBars, FaTimes, FaShoppingCart, FaUser } from 'react-icons/fa';
 import logo from '../assets/logo.jpeg';
 
-const Navbar = () => {
+const Navbar = ({ user, onLogout }) => {
     const [isScrolled, setIsScrolled] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
     const location = useLocation();
@@ -57,6 +57,20 @@ const Navbar = () => {
                 </div>
 
                 <div className="flex items-center gap-4">
+                    {user ? (
+                        <>
+                            <Link to="/checkout" className="hidden sm:flex items-center gap-2 btn-primary px-4 py-2 text-sm relative">
+                                <FaShoppingCart /> Cart
+                            </Link>
+                            <div className="hidden sm:flex items-center gap-3 px-4 py-2 rounded-lg bg-primary/10">
+                                <FaUser className="text-primary" />
+                                <span className="text-sm font-bold text-secondary">{user.name}</span>
+                            </div>
+                            <button onClick={onLogout} className="hidden sm:inline-block text-xs font-bold text-red-500 hover:text-red-700 uppercase tracking-widest">Logout</button>
+                        </>
+                    ) : (
+                        <Link to="/login" className="hidden sm:inline-block btn-primary px-6 py-2 text-sm">Login</Link>
+                    )}
                     <Link to="/reservations" className="hidden sm:inline-block btn-primary px-6 py-2 text-sm">Book Table</Link>
 
                     {/* Mobile Toggle */}
@@ -97,7 +111,25 @@ const Navbar = () => {
                                     </NavLink>
                                 </motion.div>
                             ))}
-                            <Link to="/reservations" className="btn-primary mt-4 py-4 text-center text-xl rounded-2xl w-full">
+                            {user && (
+                                <>
+                                    <Link to="/checkout" className="btn-primary mt-4 py-4 text-center text-xl rounded-2xl w-full flex items-center justify-center gap-2">
+                                        <FaShoppingCart /> Cart
+                                    </Link>
+                                    <Link to="/my-orders" className="btn-primary mt-2 py-4 text-center text-xl rounded-2xl w-full">
+                                        My Orders
+                                    </Link>
+                                    <button onClick={onLogout} className="mt-2 w-full py-4 text-center text-xl font-bold text-red-500 hover:text-red-700 uppercase tracking-widest">
+                                        Logout
+                                    </button>
+                                </>
+                            )}
+                            {!user && (
+                                <Link to="/login" className="btn-primary mt-4 py-4 text-center text-xl rounded-2xl w-full">
+                                    Login
+                                </Link>
+                            )}
+                            <Link to="/reservations" className="btn-primary mt-2 py-4 text-center text-xl rounded-2xl w-full">
                                 Book Now
                             </Link>
                         </div>
