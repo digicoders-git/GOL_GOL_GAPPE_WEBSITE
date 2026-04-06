@@ -2,15 +2,12 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { FaTrash, FaMinus, FaPlus, FaTag } from 'react-icons/fa';
-import { validateOffer, applyOffer, createOrder } from '../utils/api';
+import { FaTrash, FaMinus, FaPlus, FaCheckCircle } from 'react-icons/fa';
+import { createOrder } from '../utils/api';
 
 const Checkout = ({ cart, user, removeFromCart, updateQty }) => {
     const navigate = useNavigate();
-    const [offerCode, setOfferCode] = useState('');
-    const [appliedOffer, setAppliedOffer] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [showOfferInput, setShowOfferInput] = useState(false);
 
     if (!user) {
         return (
@@ -31,54 +28,22 @@ const Checkout = ({ cart, user, removeFromCart, updateQty }) => {
     }
 
     const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
-    const discount = appliedOffer ? appliedOffer.priceBreakdown.discountAmount : 0;
-    const total = subtotal - discount;
-
-    const handleValidateOffer = async () => {
-        if (!offerCode.trim()) {
-            toast.error('Enter offer code');
-            return;
-        }
-        
-        // Get first product ID from cart for product-specific offers
-        const productId = cart.length > 0 ? cart[0]._id : null;
-        
-        setLoading(true);
-        try {
-            const res = await validateOffer(offerCode, subtotal, productId);
-            setAppliedOffer(res.data);
-            toast.success('Offer applied successfully! ✓');
-            setShowOfferInput(false);
-        } catch (err) {
-            toast.error(err.response?.data?.message || 'Invalid offer code');
-            setAppliedOffer(null);
-        } finally {
-            setLoading(false);
-        }
-    };
+    const discount = cart.reduce((sum, item) => (item.discount || 0) * item.qty, 0);
+    const total = subtotal;
 
     const handleCheckout = async () => {
-        if (!appliedOffer) {
-            toast.error('Please apply an offer first');
-            return;
-        }
-        
-        const productId = cart.length > 0 ? cart[0]._id : null;
-        
         setLoading(true);
         try {
-            // Apply offer to mark it as used
-            await applyOffer(offerCode, subtotal, productId);
-            
             const orderData = {
                 items: cart.map(item => ({
                     product: item._id,
                     quantity: item.qty,
-                    price: item.price
+                    price: item.price,
+                    discount: item.discount || 0,
+                    offer: item.offer || null
                 })),
-                totalAmount: appliedOffer.priceBreakdown.finalPrice,
-                offerCode: offerCode,
-                discount: appliedOffer.priceBreakdown.discountAmount,
+                totalAmount: total,
+                discount: discount,
                 paymentMethod: 'Cash',
                 paymentStatus: 'Pending'
             };
@@ -107,10 +72,16 @@ const Checkout = ({ cart, user, removeFromCart, updateQty }) => {
                                 animate={{ opacity: 1, y: 0 }}
                                 className="bg-white rounded-2xl p-4 flex gap-4 items-center shadow-sm border border-zinc-100"
                             >
-                                <img src={item.thumbnail} alt={item.name} className="w-20 h-20 rounded-lg object-cover" />
+                                <img src={item.image || item.thumbnail} alt={item.name} className="w-20 h-20 rounded-lg object-cover" />
                                 <div className="flex-1">
                                     <h3 className="font-bold text-secondary">{item.name}</h3>
                                     <p className="text-sm text-zinc-400">₹{item.price}</p>
+                                    {item.offer && (
+                                        <div className="flex items-center gap-1 mt-1">
+                                            <FaCheckCircle className="text-green-600 text-xs" />
+                                            <span className="text-xs text-green-600 font-bold">{item.offer.title}</span>
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="flex items-center gap-2 bg-zinc-100 rounded-lg p-1">
                                     <button onClick={() => updateQty(item._id, item.qty - 1)} className="p-1 hover:bg-white rounded"><FaMinus size={12} /></button>
@@ -150,47 +121,18 @@ const Checkout = ({ cart, user, removeFromCart, updateQty }) => {
                                 <span className="text-primary">₹{total.toFixed(2)}</span>
                             </div>
 
-                            {/* Offer Section */}
-                            {!appliedOffer ? (
-                                <div className="space-y-2">
-                                    {!showOfferInput ? (
-                                        <button
-                                            onClick={() => setShowOfferInput(true)}
-                                            className="w-full border-2 border-dashed border-primary text-primary font-bold py-2 rounded-lg hover:bg-primary/5 transition-all flex items-center justify-center gap-2"
-                                        >
-                                            <FaTag size={14} /> Add Offer Code
-                                        </button>
-                                    ) : (
-                                        <div className="space-y-2">
-                                            <input
-                                                type="text"
-                                                placeholder="Enter 6-digit code"
-                                                value={offerCode}
-                                                onChange={(e) => setOfferCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6))}
-                                                maxLength={6}
-                                                className="w-full border border-zinc-200 rounded-lg px-3 py-2 text-sm font-bold outline-none focus:border-primary uppercase tracking-wider"
-                                            />
-                                            <button
-                                                onClick={handleValidateOffer}
-                                                disabled={loading || offerCode.length !== 6}
-                                                className="w-full bg-primary text-white font-bold py-2 rounded-lg hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                                            >
-                                                {loading ? 'Checking...' : 'Apply Offer'}
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-                            ) : (
-                                <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 space-y-2">
-                                    <p className="text-xs font-black text-emerald-700 uppercase">✓ Offer Valid</p>
-                                    <p className="text-sm font-bold text-secondary">{appliedOffer.offer.code}</p>
-                                    <p className="text-xs text-zinc-600">Save ₹{appliedOffer.priceBreakdown.discountAmount}</p>
+                            {discount > 0 && (
+                                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                                    <p className="text-xs font-black text-green-700 uppercase flex items-center gap-2">
+                                        <FaCheckCircle /> Offers Applied
+                                    </p>
+                                    <p className="text-xs text-zinc-600 mt-1">You saved ₹{discount.toFixed(2)}</p>
                                 </div>
                             )}
 
                             <button
                                 onClick={handleCheckout}
-                                disabled={loading || !appliedOffer}
+                                disabled={loading}
                                 className="w-full bg-secondary text-primary font-black py-3 rounded-lg hover:bg-black transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider text-sm"
                             >
                                 {loading ? 'Processing...' : 'Confirm Order'}

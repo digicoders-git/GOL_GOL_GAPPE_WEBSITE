@@ -14,23 +14,72 @@ import Reviews from './pages/Reviews';
 import Reservations from './pages/Reservations';
 import Team from './pages/Team';
 import Checkout from './pages/Checkout';
+import Franchise from './pages/Franchise';
 
 function App() {
   const location = useLocation();
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
+  const [cart, setCart] = useState([]);
 
-  // Initial Load Effect
   useEffect(() => {
     const timer = setTimeout(() => {
       setLoading(false);
-    }, 2000); // 2 seconds splash
+    }, 2000);
     return () => clearTimeout(timer);
   }, []);
 
-  // Scroll to top on route change
+  useEffect(() => {
+    const token = localStorage.getItem('gg_token');
+    const userData = localStorage.getItem('gg_user');
+    if (token && userData) {
+      setUser(JSON.parse(userData));
+    }
+  }, []);
+
+  useEffect(() => {
+    const savedCart = localStorage.getItem('gg_cart');
+    if (savedCart) {
+      setCart(JSON.parse(savedCart));
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('gg_cart', JSON.stringify(cart));
+  }, [cart]);
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('gg_token');
+    localStorage.removeItem('gg_user');
+    setUser(null);
+    setCart([]);
+  };
+
+  const addToCart = (item) => {
+    setCart(prev => {
+      const existing = prev.find(i => i._id === item._id);
+      if (existing) {
+        return prev.map(i => i._id === item._id ? { ...i, qty: i.qty + 1 } : i);
+      }
+      return [...prev, { ...item, qty: 1 }];
+    });
+  };
+
+  const removeFromCart = (id) => {
+    setCart(prev => prev.filter(item => item._id !== id));
+  };
+
+  const updateQty = (id, qty) => {
+    if (qty <= 0) {
+      removeFromCart(id);
+    } else {
+      setCart(prev => prev.map(item => item._id === id ? { ...item, qty } : item));
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -48,13 +97,13 @@ function App() {
 
       {!loading && (
         <>
-          <Navbar user={user} onLogout={handleLogout} />
+          <Navbar user={user} cart={cart} onLogout={handleLogout} />
           <main className="flex-grow">
             <AnimatePresence mode="wait">
               <Routes location={location} key={location.pathname}>
                 <Route path="/" element={<PageTransition><Home /></PageTransition>} />
                 <Route path="/story" element={<PageTransition><Story /></PageTransition>} />
-                <Route path="/menu" element={<PageTransition><Menu /></PageTransition>} />
+                <Route path="/menu" element={<PageTransition><Menu user={user} addToCart={addToCart} /></PageTransition>} />
                 <Route path="/gallery" element={<PageTransition><Gallery /></PageTransition>} />
                 <Route path="/reviews" element={<PageTransition><Reviews /></PageTransition>} />
                 <Route path="/contact" element={<PageTransition><Contact /></PageTransition>} />

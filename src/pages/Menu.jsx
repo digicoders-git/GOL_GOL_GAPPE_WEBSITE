@@ -1,13 +1,15 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { FaUtensils, FaLeaf, FaPepperHot, FaStar, FaCocktail, FaFire } from 'react-icons/fa';
+import { FaUtensils, FaLeaf, FaPepperHot, FaStar, FaCocktail, FaFire, FaTag, FaCheckCircle, FaGift } from 'react-icons/fa';
 import toast from 'react-hot-toast';
-import { getAvailableProducts } from '../utils/api';
+import { getAvailableProducts, applyOfferToProduct } from '../utils/api';
 
 const Menu = ({ user, addToCart }) => {
     const containerRef = useRef(null);
     const [menuItems, setMenuItems] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [appliedOffers, setAppliedOffers] = useState({});
+    const [applyingOffer, setApplyingOffer] = useState(null);
 
     const { scrollYProgress } = useScroll({
         target: containerRef,
@@ -31,6 +33,7 @@ const Menu = ({ user, addToCart }) => {
                             acc[category] = [];
                         }
                         acc[category].push({
+                            _id: product._id, // ✅ Add product ID
                             name: product.name,
                             basePrice: product.price,
                             discountPrice: product.discountPrice,
@@ -39,7 +42,8 @@ const Menu = ({ user, addToCart }) => {
                             tag: product.tags?.[0] || (product.status === 'Low Stock' ? 'Limited' : 'Available'),
                             icon: product.foodType === 'veg' ? FaLeaf : FaUtensils,
                             spicy: product.tags?.includes('Spicy') || false,
-                            inStock: product.inStock && product.quantity > 0
+                            inStock: product.inStock && product.quantity > 0,
+                            activeOffer: product.activeOffer || null // ✅ Add offer data
                         });
                         return acc;
                     }, {});
@@ -63,6 +67,72 @@ const Menu = ({ user, addToCart }) => {
 
         fetchProducts();
     }, []);
+
+    const handleApplyOffer = async (item) => {
+        if (!user) {
+            toast.error('Please login to apply offers');
+            window.location.href = '/login';
+            return;
+        }
+
+        setApplyingOffer(item._id);
+
+        try {
+            const response = await applyOfferToProduct(item._id, 1);
+            
+            if (response.data.success) {
+                const { priceBreakdown, offer } = response.data;
+                
+                setAppliedOffers(prev => ({
+                    ...prev,
+                    [item._id]: {
+                        applied: true,
+                        finalPrice: priceBreakdown.finalPrice,
+                        savings: priceBreakdown.savings,
+                        offer: offer
+                    }
+                }));
+
+                addToCart({
+                    ...item,
+                    price: priceBreakdown.finalPrice,
+                    originalPrice: priceBreakdown.basePrice,
+                    discount: priceBreakdown.discountAmount,
+                    offer: offer
+                });
+
+                toast.success(`🎉 ${offer.title} Applied! Saved ₹${priceBreakdown.savings}`, {
+                    duration: 4000,
+                    icon: '🎉'
+                });
+            }
+        } catch (error) {
+            console.error('Apply offer error:', error);
+            const errorMsg = error.response?.data?.message || 'Failed to apply offer';
+            toast.error(errorMsg);
+        } finally {
+            setApplyingOffer(null);
+        }
+    };
+
+    const calculateFinalPrice = (item) => {
+        if (appliedOffers[item._id]) {
+            return appliedOffers[item._id].finalPrice;
+        }
+        
+        if (item.activeOffer) {
+            const { discountType, discountValue } = item.activeOffer;
+            const price = item.discountPrice || item.basePrice;
+            
+            if (discountType === 'percentage') {
+                return price - (price * discountValue / 100);
+            } else {
+                return price - discountValue;
+            }
+        }
+        
+        return item.discountPrice || item.basePrice;
+    };
 
     return (
         <div ref={containerRef} className="animate-fade-in bg-background overflow-hidden">
@@ -144,6 +214,18 @@ const Menu = ({ user, addToCart }) => {
                                     <div className="h-64 md:h-72 relative overflow-hidden">
                                         <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                        
+                                        {item.activeOffer && (
+                                            <motion.div
+                                                initial={{ scale: 0 }}
+                                                animate={{ scale: 1 }}
+                                                className="absolute top-4 left-4 md:top-6 md:left-6 bg-gradient-to-r from-orange-500 to-red-600 text-white px-4 md:px-5 py-2 md:py-2.5 rounded-full text-xs md:text-sm font-black shadow-2xl flex items-center gap-2 animate-pulse"
+                                            >
+                                                <FaTag className="text-sm" />
+                                                {item.activeOffer.discountValue}{item.activeOffer.discountType === 'percentage' ? '%' : '₹'} OFF
+                                            </motion.div>
+                                        )}
+                                        
                                         <span className="absolute top-4 right-4 md:top-6 md:right-6 bg-primary text-secondary px-4 md:px-6 py-1.5 md:py-2 rounded-full text-[10px] md:text-xs font-black shadow-2xl flex items-center gap-2">
                                             {item.tag}
                                         </span>
@@ -160,7 +242,13 @@ const Menu = ({ user, addToCart }) => {
                                                 <item.icon className="text-primary/40 text-lg" />
                                             </div>
                                             <div className="text-right">
-                                                {item.discountPrice && item.discountPrice < item.basePrice ? (
+                                                {appliedOffers[item._id] ? (
+                                                    <>
+                                                        <span className="text-xs md:text-sm font-black text-zinc-400 line-through mr-2">₹{item.discountPrice || item.basePrice}</span>
+                                                        <span className="text-xl md:text-2xl font-display text-green-600 block">₹{appliedOffers[item._id].finalPrice}</span>
+                                                        <span className="text-[10px] text-green-600 font-bold">Saved ₹{appliedOffers[item._id].savings}</span>
+                                                    </>
+                                                ) : item.discountPrice && item.discountPrice < item.basePrice ? (
                                                     <>
                                                         <span className="text-xs md:text-sm font-black text-zinc-400 line-through mr-2">₹{item.basePrice}</span>
                                                         <span className="text-xl md:text-2xl font-display text-primary block">₹{item.discountPrice}</span>
@@ -170,7 +258,38 @@ const Menu = ({ user, addToCart }) => {
                                                 )}
                                             </div>
                                         </div>
-                                        <p className="text-text-muted text-base md:text-lg leading-relaxed mb-6 md:mb-8 flex-grow italic">{item.desc}</p>
+                                        <p className="text-text-muted text-base md:text-lg leading-relaxed mb-4 md:mb-6 flex-grow italic">{item.desc}</p>
+                                        
+                                        {item.activeOffer && !appliedOffers[item._id] && (
+                                            <div className="mb-4 p-4 bg-gradient-to-r from-orange-50 to-red-50 rounded-2xl border-2 border-orange-200">
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <FaGift className="text-orange-600" />
+                                                    <span className="text-sm font-bold text-orange-800">{item.activeOffer.title}</span>
+                                                </div>
+                                                <p className="text-xs text-orange-700 mb-3">
+                                                    Get {item.activeOffer.discountValue}{item.activeOffer.discountType === 'percentage' ? '%' : '₹'} OFF on this item!
+                                                </p>
+                                                <motion.button
+                                                    whileTap={{ scale: 0.95 }}
+                                                    disabled={applyingOffer === item._id}
+                                                    onClick={() => handleApplyOffer(item)}
+                                                    className="w-full bg-gradient-to-r from-orange-500 to-red-600 text-white py-2.5 rounded-xl font-bold text-sm hover:from-orange-600 hover:to-red-700 transition-all shadow-lg disabled:opacity-50"
+                                                >
+                                                    {applyingOffer === item._id ? 'Applying...' : 'Apply Offer'}
+                                                </motion.button>
+                                            </div>
+                                        )}
+
+                                        {appliedOffers[item._id] && (
+                                            <div className="mb-4 p-4 bg-green-50 rounded-2xl border-2 border-green-300 flex items-center gap-2">
+                                                <FaCheckCircle className="text-green-600 text-lg" />
+                                                <div className="flex-1">
+                                                    <span className="text-sm font-bold text-green-800 block">Offer Applied!</span>
+                                                    <span className="text-xs text-green-600">Saved ₹{appliedOffers[item._id].savings}</span>
+                                                </div>
+                                            </div>
+                                        )}
+
                                         <motion.button
                                             whileTap={{ scale: 0.95 }}
                                             disabled={!item.inStock}
@@ -179,7 +298,8 @@ const Menu = ({ user, addToCart }) => {
                                                     window.location.href = '/login';
                                                     return;
                                                 }
-                                                addToCart({ ...item, _id: item.name, price: item.discountPrice || item.basePrice });
+                                                const finalPrice = appliedOffers[item._id] ? appliedOffers[item._id].finalPrice : (item.discountPrice || item.basePrice);
+                                                addToCart({ ...item, _id: item.name, price: finalPrice });
                                                 toast.success(`${item.name} added to cart!`);
                                             }}
                                             className={`w-full py-4 md:py-5 rounded-[1.5rem] md:rounded-[2rem] font-black uppercase tracking-widest text-[10px] md:text-xs transition-all shadow-xl ${

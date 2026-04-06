@@ -21,3 +21,6 @@ export const validateOffer = (code, orderAmount, productId) =>
 
 export const applyOffer = (code, orderAmount, productId) => 
   axios.post(`${API_URL}/offers/apply`, { code, orderAmount, productId }, { headers: authHeader() });
+
+export const applyOfferToProduct = (productId, quantity) => 
+  axios.post(`${API_URL}/offers/apply-product`, { productId, quantity }, { headers: authHeader() });
