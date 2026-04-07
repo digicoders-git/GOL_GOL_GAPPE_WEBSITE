@@ -43,6 +43,8 @@ const Menu = ({ user, addToCart }) => {
                             icon: product.foodType === 'veg' ? FaLeaf : FaUtensils,
                             spicy: product.tags?.includes('Spicy') || false,
                             inStock: product.inStock && product.quantity > 0,
+                            quantity: product.quantity || 0, // ✅ Add quantity
+                            status: product.status || 'Available', // ✅ Add status
                             activeOffer: product.activeOffer || null // ✅ Add offer data
                         });
                         return acc;
@@ -66,6 +68,11 @@ const Menu = ({ user, addToCart }) => {
         };
 
         fetchProducts();
+        
+        // Poll every 10 seconds for real-time stock updates
+        const interval = setInterval(fetchProducts, 10000);
+        
+        return () => clearInterval(interval);
     }, []);
 
     const handleApplyOffer = async (item) => {
@@ -215,6 +222,18 @@ const Menu = ({ user, addToCart }) => {
                                         <img src={item.image} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                                         
+                                        {/* Stock Status Badge */}
+                                        {item.status === 'Low Stock' && (
+                                            <motion.div
+                                                initial={{ scale: 0 }}
+                                                animate={{ scale: 1 }}
+                                                className="absolute top-4 right-4 md:top-6 md:right-6 bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-4 md:px-5 py-2 md:py-2.5 rounded-full text-xs md:text-sm font-black shadow-2xl flex items-center gap-2"
+                                            >
+                                                <FaFire className="text-sm" />
+                                                Only {item.quantity} Left!
+                                            </motion.div>
+                                        )}
+                                        
                                         {item.activeOffer && (
                                             <motion.div
                                                 initial={{ scale: 0 }}
@@ -226,7 +245,7 @@ const Menu = ({ user, addToCart }) => {
                                             </motion.div>
                                         )}
                                         
-                                        <span className="absolute top-4 right-4 md:top-6 md:right-6 bg-primary text-secondary px-4 md:px-6 py-1.5 md:py-2 rounded-full text-[10px] md:text-xs font-black shadow-2xl flex items-center gap-2">
+                                        <span className="absolute bottom-4 left-4 md:bottom-6 md:left-6 bg-primary text-secondary px-4 md:px-6 py-1.5 md:py-2 rounded-full text-[10px] md:text-xs font-black shadow-2xl flex items-center gap-2">
                                             {item.tag}
                                         </span>
                                         {item.spicy && (
